@@ -25,6 +25,8 @@
 		<!-- Test -->
 		<junit.version>4.11</junit.version>
 
+		<commons.validate>3.4</commons.validate>
+
 	</properties>
 	<dependencies>
 		<!-- Spring and Transactions -->
@@ -86,6 +88,14 @@
 			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
+		
+		<!--  Validation -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>${commons.validate}</version>
+		</dependency>
+				
 	</dependencies>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
