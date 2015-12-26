@@ -3,6 +3,8 @@
  */
 package com.exam.domain;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component
+@Scope(value=ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Answer extends ValueObject {
 
 	/**
@@ -27,14 +30,13 @@ public class Answer extends ValueObject {
 	/**
 	 * question
 	 */
-	private final Question question;
+	private Question question;
 	
 	/**
 	 * Default Constructor
 	 */
-	public Answer(Question question) {
+	public Answer() {
 		super();
-		this.question = question;
 	}
 
 	/**
@@ -57,4 +59,24 @@ public class Answer extends ValueObject {
 	public Question getQuestion() {
 		return question;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + ((detail == null) ? 0 : detail.hashCode());
+		result = prime * result + ((question == null) ? 0 : question.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return super.equals(obj);
+	}
+
+	@Override
+	public String toString() {
+		return "Answer [getId()=" + getId() + "]";
+	}
+	
 }

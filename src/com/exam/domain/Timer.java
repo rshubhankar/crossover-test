@@ -14,11 +14,7 @@ public class Timer {
 	 * Value of time, depending on the {@link TimeUnit}
 	 */
 	private long duration;
-	
-	/**
-	 * TimeUnit based on which timer will display the time.
-	 */
-	private TimeUnit timeUnit;
+	private final TimeUnit timeUnit = TimeUnit.SECONDS;
 
 	/**
 	 * @return the duration
@@ -33,26 +29,28 @@ public class Timer {
 	public void setDuration(long duration) {
 		this.duration = duration;
 	}
-
+	
 	/**
-	 * @return the timeUnit
+	 * @return timeUnit
 	 */
 	public TimeUnit getTimeUnit() {
 		return timeUnit;
 	}
 
 	/**
-	 * @param timeUnit the timeUnit to set
-	 */
-	public void setTimeUnit(TimeUnit timeUnit) {
-		this.timeUnit = timeUnit;
-	}
-	
-	/**
 	 * @return duration left in the format hh:mm:ss
 	 */
-	public String durationLeft() {
-		return timeUnit.toHours(duration) + ":" + timeUnit.toMinutes(duration) + ":" + timeUnit.toSeconds(duration);
+	public String getDurationLeft() {
+		StringBuilder builder = new StringBuilder();
+		long currentDuration = getDuration();
+		long hours = currentDuration / 3600;
+		currentDuration = currentDuration > 3600 ? currentDuration % 3600 : currentDuration;
+		builder.append(hours).append(":");
+		long minutes = currentDuration / 60;
+		currentDuration = currentDuration > 60 ? currentDuration % 60 : currentDuration;
+		builder.append(minutes).append(":").append(currentDuration);
+		return builder.toString();
+		//return timeUnit.toHours(duration) + ":" + timeUnit.toMinutes(duration) + ":" + timeUnit.toSeconds(duration);
 	}
 	
 	/**

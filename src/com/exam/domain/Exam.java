@@ -3,6 +3,8 @@ package com.exam.domain;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component
+@Scope(value=ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Exam extends ValueObject {
 	/**
 	 * Serial Version UID 
@@ -81,5 +84,18 @@ public class Exam extends ValueObject {
 	 */
 	public void setTimer(Timer timer) {
 		this.timer = timer;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return super.equals(obj);
 	}
 }

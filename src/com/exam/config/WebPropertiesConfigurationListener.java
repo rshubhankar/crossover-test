@@ -33,15 +33,16 @@ public final class WebPropertiesConfigurationListener implements ServletContextL
 	public void contextInitialized(ServletContextEvent sce) {
 		String realPath = sce.getServletContext().getRealPath("/");
 		logger.info("Real Path " + realPath);
-		String propertiesFileName = getPropertiesFileName(realPath, 1);
-		logger.info("File name " + propertiesFileName);
-		String fileName = propertiesFileName + "-web.properties";
+		String applicationName = getPropertiesFileName(realPath, 1);
+		logger.info("File name " + applicationName);
+		String fileName = applicationName + "-web.properties";
 		File file = new File(fileName);
 		if (!file.exists()) {
-			propertiesFileName = getPropertiesFileName(realPath, 2);
-			fileName = propertiesFileName + "-web.properties";
+			applicationName = getPropertiesFileName(realPath, 2);
+			fileName = applicationName + "-web.properties";
 		}
-		logger.debug("Final Customer Name " + propertiesFileName);
+		logger.debug("Final Customer Name " + applicationName);
+		sce.getServletContext().setAttribute("applicationName", applicationName);
 		listener = new ConfigurationChangeListener(fileName);
 		new Thread(listener).start();
 	}

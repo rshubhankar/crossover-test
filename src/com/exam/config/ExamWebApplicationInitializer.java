@@ -5,6 +5,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 
 import org.springframework.web.WebApplicationInitializer;
+import org.springframework.web.context.ContextLoaderListener;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 
 /**
@@ -17,9 +19,18 @@ public class ExamWebApplicationInitializer implements WebApplicationInitializer 
 
 	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException {
-		ServletRegistration.Dynamic registration = servletContext.addServlet("dispatcher", new DispatcherServlet());
+		AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
+		context.register(AppContextConfiguration.class);
+		servletContext.addListener(new WebPropertiesConfigurationListener());
+		servletContext.addListener(new ContextLoaderListener(context));
+		
+		DomainFactory.getInstance().setContext(context);
+		
+		//AnnotationConfigWebApplicationContext dispatcherContext = new AnnotationConfigWebApplicationContext();
+		//context.setConfigLocation("com.exam.config.WebAppContextConfiguration");
+		ServletRegistration.Dynamic registration = servletContext.addServlet("dispatcher", new DispatcherServlet(context));
         registration.setLoadOnStartup(1);
-        registration.addMapping("/Exam/*");
+        registration.addMapping("/");
 	}
 
 }

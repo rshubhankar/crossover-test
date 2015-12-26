@@ -1,8 +1,10 @@
 package com.exam.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component
+@Scope(value=ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Question extends ValueObject {
 
 	/**
@@ -27,13 +30,14 @@ public class Question extends ValueObject {
 	/**
 	 * list of answers
 	 */
-	private List<Answer> answers;
+	private final List<Answer> answers;
 
 	/**
 	 * Default Constructor
 	 */
 	public Question() {
 		super();
+		answers = new ArrayList<>();
 	}
 
 	/**
@@ -60,8 +64,21 @@ public class Question extends ValueObject {
 	/**
 	 * @param answers the answers to set
 	 */
-	@Autowired
+	/*@Autowired
 	public void setAnswers(List<Answer> answers) {
 		this.answers = answers;
+	}*/
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return super.equals(obj);
 	}
 }

@@ -56,9 +56,10 @@ public class DomainFactory {
      * @param beanName
      * @return object from application context
      */
-    public Object getBean(final String beanName) {
+    @SuppressWarnings("unchecked")
+	public <T> T getBean(final String beanName) {
     	logger.debug("Get Object by name: {}", beanName);
-        return context.getBean(beanName);
+        return (T) context.getBean(beanName);
     }
     
     /**

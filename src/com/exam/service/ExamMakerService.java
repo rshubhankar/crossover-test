@@ -1,6 +1,7 @@
 package com.exam.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -30,16 +31,16 @@ public class ExamMakerService {
 	 * repository instance
 	 */
 	@Autowired
-	private ExamMakerRepository testMakerRepository;
+	private ExamMakerRepository examMakerRepository;
 	
 	/**
 	 * @return exam
 	 */
 	public Exam getExam() {
-		List<Exam> exams = testMakerRepository.getExams();
+		List<Exam> exams = examMakerRepository.getExams();
 		if(exams != null && !exams.isEmpty()) {
 			Exam exam = exams.stream().findFirst().get();
-			exam.setQuestions(testMakerRepository.getQuestionsWithAllAnswersForExam(exam.getId()));
+			exam.setQuestions(examMakerRepository.getQuestionsWithAllAnswersForExam(exam.getId()));
 			return exam;
 		} else {
 			throw new ExamMakerException("No exams found in Application.");
@@ -50,7 +51,7 @@ public class ExamMakerService {
 	 * @return exam
 	 */
 	public Exam getExam(int examId) {
-		return testMakerRepository.getExamById(examId);
+		return examMakerRepository.getExamById(examId);
 	}
 	
 	/**
@@ -60,7 +61,7 @@ public class ExamMakerService {
 	 */
 	public List<Question> getExamQuestions(Exam exam) {
 		Validate.notNull(exam, "Exam object cannot be null.");
-		return testMakerRepository.getQuestionsWithAllAnswersForExam(exam.getId());
+		return examMakerRepository.getQuestionsWithAllAnswersForExam(exam.getId());
 	}
 	
 	/**
@@ -71,13 +72,22 @@ public class ExamMakerService {
 	 * @return score of the exam
 	 */
 	public long evaluateExam(int examId, List<Question> attemptedQuestions) {
-		List<Question> questions = testMakerRepository.getQuestionsWithCorrectAnswersForExam(examId);
+		List<Question> questions = examMakerRepository.getQuestionsWithCorrectAnswersForExam(examId);
+		attemptedQuestions.stream().forEach(q -> {
+			List<Answer> answers = q.getAnswers();
+			List<Answer> filteredAttemptedAnswers = answers.stream().filter(a -> a.getId() > 0).collect(Collectors.<Answer>toList());
+			answers.clear();
+			answers.addAll(filteredAttemptedAnswers);
+		});
+		
 		return attemptedQuestions.stream().filter(q -> {
 			int questionIndexInList = questions.indexOf(q);
-			if(questionIndexInList != -1) {
+			List<Answer> attemptedAnswers = q.getAnswers();
+			logger.debug(attemptedAnswers.toString());
+			if(questionIndexInList != -1 && attemptedAnswers != null) {
 				Question question = questions.get(questionIndexInList);
 				List<Answer> answers = question.getAnswers();
-				List<Answer> attemptedAnswers = q.getAnswers();
+				logger.debug(answers.toString());
 				if(answers.size() == 1 && attemptedAnswers.size() == 1) {
 					return answers.stream().findFirst().get().equals(attemptedAnswers.stream().findFirst().get());
 				} else {
@@ -89,10 +99,33 @@ public class ExamMakerService {
 					}
 				}
 			} else {
-				logger.error("Invalid question found: {}, for exam: {}", q.getId(), examId);
+				logger.error("Invalid question or question was not attempted : {}, for exam: {}", q.getId(), examId);
 				return false;
 			}
 		}).count();
+	}
+	
+	/**
+	 * Save Candidate result.
+	 * 
+	 * @param candidate
+	 * @param exam
+	 * @param result
+	 * @return candidate exam id 
+	 */
+	public int addCandidateExam(Candidate candidate, Exam exam) {
+		return examMakerRepository.addCandidateExam(candidate, exam);
+	}
+	
+	/**
+	 * Save Candidate result.
+	 * 
+	 * @param candidate
+	 * @param exam
+	 * @param result
+	 */
+	public void saveCandidateResult(int candidateExamId, double result) {
+		examMakerRepository.saveCandidateResult(candidateExamId, result);
 	}
 	
 	/**
@@ -102,17 +135,23 @@ public class ExamMakerService {
 	 * @param password
 	 * @return authenticated
 	 */
-	public boolean autheticateCandidate(String username, String password) {
-		Candidate candidate = testMakerRepository.getCandidate(username);
-		if(candidate != null) {
-			return candidate.getPassword().equals(password);
+	public boolean autheticateCandidate(Candidate candidate) {
+		Candidate pCandidate = examMakerRepository.getCandidate(candidate.getUsername());
+		if(pCandidate != null) {
+			return pCandidate.getPassword().equals(candidate.getPassword());
 		} else {
-			candidate = new Candidate();
-			candidate.setUsername(username);
-			candidate.setPassword(password);
-			testMakerRepository.saveCandidate(candidate);
+			examMakerRepository.saveCandidate(candidate);
 			return true;
 		}
-		
+	}
+	
+	/**
+	 * Get Candidate object.
+	 * 
+	 * @param username
+	 * @return candidate object
+	 */
+	public Candidate getCandidate(String username) {
+		return examMakerRepository.getCandidate(username);
 	}
 }

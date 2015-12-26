@@ -26,9 +26,11 @@ public class ExamInterceptor implements HandlerInterceptor {
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 		logger.debug("preHandle() called.");
-		String loginId = (String) request.getSession().getAttribute("loginId");
-		if(loginId == null) {
-			response.sendRedirect("/Exam/");
+		String applicationName = (String) request.getServletContext().getAttribute("applicationName");
+		String uri = request.getRequestURI();
+		String username = (String) request.getSession().getAttribute("username");
+		if(!uri.endsWith("login") && !uri.endsWith("/") && !uri.endsWith(applicationName) && username == null) {
+			response.sendRedirect("/" + applicationName + "/");
 			return false;
 		}
 		return true;

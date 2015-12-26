@@ -1,9 +1,10 @@
 package com.exam.repository;
 
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,11 +13,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Repository;
 
+import com.exam.config.DomainFactory;
 import com.exam.config.WebPropertiesConfigurationListener;
 import com.exam.domain.Answer;
 import com.exam.domain.Candidate;
 import com.exam.domain.Exam;
 import com.exam.domain.Question;
+import com.exam.domain.Timer;
 
 /**
  * Repository class to fetch exam details, questions and answers. This class can also be used to store user answers.
@@ -31,6 +34,8 @@ public class ExamMakerRepository {
 	 */
 	private final Logger logger = LoggerFactory.getLogger(WebPropertiesConfigurationListener.class);
 	
+	private final DomainFactory domainFactory = DomainFactory.getInstance();
+	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 	
@@ -40,7 +45,7 @@ public class ExamMakerRepository {
 	public List<Exam> getExams() {
 		logger.debug("Get Exams");
 		return jdbcTemplate.query("SELECT * FROM EXAM", (rs, rnum) -> {
-			Exam exam = new Exam();
+			Exam exam = domainFactory.getBean(Exam.class);
 			exam.setId(rs.getInt("id"));
 			exam.setDescription(rs.getString("description"));
 			return exam;
@@ -59,9 +64,16 @@ public class ExamMakerRepository {
 					(ResultSetExtractor<Exam>)((rs) -> {
 			Exam exam = null;
 			if(rs.next()) {  
-				exam = new Exam();
+				exam = domainFactory.getBean(Exam.class);
 				exam.setId(rs.getInt("id"));
 				exam.setDescription(rs.getString("description"));
+				Timer timer = new Timer();
+				long duration = rs.getLong("timer");
+				TimeUnit dbTimeUnit = TimeUnit.valueOf(rs.getString("time_unit"));
+				TimeUnit timeUnit = timer.getTimeUnit();
+				duration = timeUnit.convert(duration, dbTimeUnit);
+				timer.setDuration(duration);
+				exam.setTimer(timer);
 			}
 			return exam;
 		}), new Object[] {examId});
@@ -76,19 +88,21 @@ public class ExamMakerRepository {
 	private List<Question> getQuestionsForExam(String questionsQuery, Object...args) {
 		return jdbcTemplate.query(questionsQuery, args, 
 					(ResultSetExtractor<List<Question>>)(rs -> {
-			final List<Question> questions = new ArrayList<>();
+			final List<Question> questions = domainFactory.getBean("questions");
 			final Map<Integer, Question> questionsMap = new HashMap<>();
 			int questionId;
 			while(rs.next()) {
 				questionId = rs.getInt("ques_id");
 				Question question = questionsMap.get(questionId);
 				if(question == null) {
+					// TODO Question object is created with a default answer ???
+					//question = domainFactory.getBean(Question.class);
 					question = new Question();
 					question.setId(questionId);
 					question.setDescription(rs.getString("ques_desc"));
 					questionsMap.put(questionId, question);
 				}
-				Answer answer = new Answer(question);
+				Answer answer = domainFactory.getBean(Answer.class);
 				answer.setId(rs.getInt("ans_id"));
 				answer.setDetail(rs.getString("ans_desc"));
 				question.getAnswers().add(answer);
@@ -126,10 +140,10 @@ public class ExamMakerRepository {
 	
 	public Candidate getCandidate(String username) {
 		
-		return jdbcTemplate.query("SELECT * FROM CANDIDATE WHERE LOWER(USERNAME) = LOWER(?)", (ResultSetExtractor<Candidate>)(rs) -> {
+		return jdbcTemplate.query("SELECT * FROM CANDIDATE WHERE LOWER(USERNAME) = LOWER(?)", new Object[]{username}, (ResultSetExtractor<Candidate>)(rs) -> {
 			Candidate candidate = null;
 			if(rs.next()) {
-				candidate = new Candidate();
+				candidate = domainFactory.getBean(Candidate.class);
 				candidate.setId(rs.getInt("id"));
 				candidate.setUsername(rs.getString("username"));
 				candidate.setPassword(rs.getString("password"));
@@ -146,5 +160,39 @@ public class ExamMakerRepository {
 	public void saveCandidate(Candidate candidate) {
 		logger.debug("Save candidate: {}", candidate);
 		jdbcTemplate.update("INSERT INTO CANDIDATE (USERNAME, PASSWORD) VALUES (?, ?)", new Object[] {candidate.getUsername(), candidate.getPassword()}); 
+	}
+
+	/**
+	 * Add Candidate Exam.
+	 * 
+	 * @param candidate
+	 * @param exam
+	 * @param result
+	 * @return candidate exam id
+	 */
+	public int addCandidateExam(Candidate candidate, Exam exam) {
+		logger.debug("Add Candidate Exam entry: {}", candidate);
+		Calendar calendar = Calendar.getInstance();
+		jdbcTemplate.update("INSERT INTO CANDIDATE_EXAM (CANDIDATE_ID, EXAM_ID, DATE_START) VALUES (?, ?, ?)", new Object[] {candidate.getId(), exam.getId(), calendar.getTime()});
+		return jdbcTemplate.query("SELECT MAX(ID) AS ID FROM CANDIDATE_EXAM WHERE CANDIDATE_ID = ? AND EXAM_ID = ?", new Object[] {candidate.getId(), exam.getId()}, ((ResultSetExtractor<Integer>)rs -> {
+			Integer id = null;
+			if(rs.next()) {
+				id = rs.getInt("ID");
+			}
+			return id;
+		})); 
+	}
+	
+	/**
+	 * Save Candidate result.
+	 * 
+	 * @param candidate
+	 * @param exam
+	 * @param result
+	 */
+	public void saveCandidateResult(int candidateExamId, double result) {
+		logger.debug("Save candidate result for {}", candidateExamId);
+		Calendar calendar = Calendar.getInstance();
+		jdbcTemplate.update("UPDATE CANDIDATE_EXAM SET RESULT = ?, DATE_END = ? WHERE ID = ?", new Object[] {result, calendar.getTime(), candidateExamId});
 	}
 }
