@@ -71,8 +71,9 @@ public class ExamMakerService {
 	 * @param answers
 	 * @return score of the exam
 	 */
-	public long evaluateExam(int examId, List<Question> attemptedQuestions) {
+	public double evaluateExam(int examId, List<Question> attemptedQuestions) {
 		List<Question> questions = examMakerRepository.getQuestionsWithCorrectAnswersForExam(examId);
+		int totalCount = questions.size();
 		attemptedQuestions.stream().forEach(q -> {
 			List<Answer> answers = q.getAnswers();
 			List<Answer> filteredAttemptedAnswers = answers.stream().filter(a -> a.getId() > 0).collect(Collectors.<Answer>toList());
@@ -80,7 +81,7 @@ public class ExamMakerService {
 			answers.addAll(filteredAttemptedAnswers);
 		});
 		
-		return attemptedQuestions.stream().filter(q -> {
+		long correctCount = attemptedQuestions.stream().filter(q -> {
 			int questionIndexInList = questions.indexOf(q);
 			List<Answer> attemptedAnswers = q.getAnswers();
 			logger.debug(attemptedAnswers.toString());
@@ -103,6 +104,8 @@ public class ExamMakerService {
 				return false;
 			}
 		}).count();
+		
+		return ((correctCount * 100.0)/ totalCount);
 	}
 	
 	/**

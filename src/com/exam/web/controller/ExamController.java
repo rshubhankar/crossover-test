@@ -83,8 +83,8 @@ public class ExamController {
 	
 	@RequestMapping(value = { "/evaluate" }, method = RequestMethod.POST)
 	public String evaluate(@ModelAttribute Exam exam, Model model, 
-			@RequestParam(defaultValue="1") int candidateExamId, @RequestParam String username) {
-		long result = examMakerService.evaluateExam(exam.getId(), exam.getQuestions());
+			@RequestParam int candidateExamId, @RequestParam String username) {
+		double result = examMakerService.evaluateExam(exam.getId(), exam.getQuestions());
 		examMakerService.saveCandidateResult(candidateExamId, result);
 		model.addAttribute("exam", exam);
 		model.addAttribute("result", result);

@@ -35,7 +35,7 @@ public class DomainFactory {
     /**
      * @param context
      */
-    void setContext(ApplicationContext context) {
+    public void setContext(ApplicationContext context) {
 		this.context = context;
 	}
     
