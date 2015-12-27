@@ -57,7 +57,7 @@ public class ExamControllerTest {
 	
     @BeforeClass
 	public static void setUpBeforeClass() {
-		File file = new File("TestExamMaker-web.properties");
+		File file = new File("Exam-web.properties");
 		System.out.println(file.getAbsolutePath());
 		if(file.exists()) {
 			ApplicationConfiguration.getInstance().initialize(file.getAbsolutePath());	
