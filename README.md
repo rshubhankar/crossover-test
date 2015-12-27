@@ -18,7 +18,7 @@ View a front-end timer in the question page that count down by second.
 
 Create back-end timer callback service that check if candidate passed the exam duration, this service should be invoked by front end every 2 seconds. in front end; exam should be end with an appropriate message if test duration passed.
 
-Please read the following steps to run the scraper
+Please read the following steps to run the application
 
 # Pre-requisite installations on Windows #
 
@@ -92,3 +92,8 @@ This should open the login page. Enter any username and password. It will log in
 ##### NOTE: For some reason, if you are seeing an Error instead of login page, then check if there exists a record in the Exam table.#####
 
 After completion of the test your result will be displayed.
+
+###### Issues faced while development######
+* The submission of the questions page returned results with multiple selected answers even though only one answer was selected. The ids for these answers were set to 0, after going through many forums and discussions, I was not able to determine the root cause for this issue and hence, had to add a hack to remove the unwanted answers in Java.
+* The creation of the Questions page also took quite a coniderable amount of time, where I had to finally use JSTL to show the questions and answers.
+* There are still areas of improvement, in code designed and developed but due to time restrictions, it was not possible.
